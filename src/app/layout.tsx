@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 export const metadata: Metadata = {
    metadataBase: new URL('https://movie-finder-app-nextjs.vercel.app'),
   title: "MovieFinder - Discover & Search Your Favorite Films",
-  description: "Discover and search thousands of films with MovieFinder. Get details, ratings, and trailers for popular and classic movies. Built with Next.js and the TMDB API.",
+  description: "Discover and search thousands of films with MovieFinder. Get details, ratings, and trailers for popular movies. Built with Next.js and the TMDB API.",
 
 
     alternates: {
