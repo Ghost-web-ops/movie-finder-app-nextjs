@@ -53,7 +53,7 @@ function MovieSearchPage() {
   return (
     <main className="container mx-auto p-4">
 
-      <section className="text-center mb-12">
+      <section className="text-center mb-12 mt-6">
         <h1 className="text-4xl md:text-5xl font-bold">
           Discover Your Next Favorite Film
         </h1>

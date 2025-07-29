@@ -3,12 +3,10 @@ import Navbar from "@/components/Navbar";
 import "./globals.css";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Inter } from "next/font/google";
 import { FavoritesProvider } from "@/hooks/useFavorites"; 
 import { ScrollToTop } from "@/components/ScrollToTop";
 
 
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   // --- Basic Info ---
@@ -45,7 +43,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} flex flex-col min-h-screen`}>
+       <body className={` flex flex-col min-h-screen`}> 
         
         <FavoritesProvider>
         <ThemeProvider
