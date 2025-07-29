@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-// Define the shape of a movie object
+// --- هذا هو الجزء المفقود ---
 export interface Movie {
   id: number;
   title: string;
@@ -10,17 +10,16 @@ export interface Movie {
   release_date: string;
   vote_average: number;
 }
+// -----------------------------
 
-// Define the shape of the API response
-interface ApiResponse {
-  results: Movie[];
-  total_pages: number;
+interface UseMoviesProps {
+  query?: string;
+  page?: number;
+  genre?: string;
+  year?: string;
 }
 
-const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
-const API_BASE_URL = "https://api.themoviedb.org/3";
-
-export function useMovies(query: string, page: number) {
+export function useMovies({ query, page = 1, genre, year }: UseMoviesProps) {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,43 +29,42 @@ export function useMovies(query: string, page: number) {
     const fetchMovies = async () => {
       setIsLoading(true);
       setError(null);
-
-      // Determine the URL based on whether there is a search query
-      const endpoint = query ? "/search/movie" : "/movie/popular";
+      
+      const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+      const API_BASE_URL = "https://api.themoviedb.org/3";
+      
+      let endpoint = "/movie/popular";
       const params = new URLSearchParams({
         api_key: API_KEY || "",
         language: "en-US",
         page: page.toString(),
       });
-      if (query) {
-        params.append("query", query);
-      }
 
+      if (query) {
+        endpoint = "/search/movie";
+        params.append("query", query);
+      } else if (genre || year) {
+        endpoint = "/discover/movie";
+        if (genre) params.append("with_genres", genre);
+        if (year) params.append("primary_release_year", year);
+      }
+      
       const url = `${API_BASE_URL}${endpoint}?${params.toString()}`;
 
       try {
-        const response = await axios.get<ApiResponse>(url);
-        if (response.data.results.length === 0 && query) {
-            setError("No movies found for your search.");
-        }
+        const response = await axios.get(url);
         setMovies(response.data.results);
-        // Prevent total_pages from exceeding 500 as per TMDB API docs
         setTotalPages(Math.min(response.data.total_pages, 500));
       } catch (err) {
         console.error("Failed to fetch movies:", err);
-        setError("Failed to load movies. Please check your connection or try again later.");
+        setError("Failed to load movies.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (API_KEY) {
-        fetchMovies();
-    } else {
-        setError("API Key is missing. Please check your environment variables.");
-        setIsLoading(false);
-    }
-  }, [query, page]);
+    fetchMovies();
+  }, [query, page, genre, year]);
 
   return { movies, totalPages, isLoading, error };
 }

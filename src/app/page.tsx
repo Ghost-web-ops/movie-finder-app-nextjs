@@ -1,4 +1,3 @@
-// app/page.tsx
 "use client";
 import { useState, FormEvent, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -12,29 +11,33 @@ import {
   LoadingState,
   MessageDisplay,
 } from "@/components/MovieComponents";
-import { Pagination } from "@/components/Pagination"; // A new component for pagination controls
+import { Pagination } from "@/components/Pagination";
+import { FilterControls } from "@/components/FilterControls";
 
 // Main Page Component
 function MovieSearchPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Get state from URL
+  // 1. Get ALL state from URL, including new filters
   const currentQuery = searchParams.get("query") || "";
   const currentPage = parseInt(searchParams.get("page") || "1");
+  const currentGenre = searchParams.get("genre") || "";
+  const currentYear = searchParams.get("year") || "";
 
   // Local state for the controlled input field
   const [searchInput, setSearchInput] = useState(currentQuery);
 
-  // Use our custom hook to fetch data
-  const { movies, totalPages, isLoading, error } = useMovies(
-    currentQuery,
-    currentPage
-  );
+  // 2. Call useMovies with a SINGLE object argument
+  const { movies, totalPages, isLoading, error } = useMovies({
+    query: currentQuery,
+    page: currentPage,
+    genre: currentGenre,
+    year: currentYear,
+  });
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
-    // Use URLSearchParams for cleaner URL management
     const params = new URLSearchParams();
     params.set("query", searchInput);
     params.set("page", "1");
@@ -49,17 +52,18 @@ function MovieSearchPage() {
 
   return (
     <main className="container mx-auto p-4">
+
       <section className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-bold">
           Discover Your Next Favorite Film
         </h1>
-        <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
+        <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
           Explore thousands of movies, search for any title, and get all the
           details you need.
         </p>
       </section>
 
-      <form onSubmit={handleSearch} className="flex max-w-xl mx-auto mb-8">
+      <form onSubmit={handleSearch} className="flex max-w-xl mx-auto mb-4">
         <Input
           type="text"
           placeholder="Search for a movie..."
@@ -71,6 +75,9 @@ function MovieSearchPage() {
           {isLoading ? "Searching..." : "Search"}
         </Button>
       </form>
+
+      {/* 3. Add the FilterControls component to the page */}
+      <FilterControls />
 
       {/* --- Conditional Rendering Logic --- */}
       {isLoading && <LoadingState />}
@@ -90,6 +97,10 @@ function MovieSearchPage() {
             onPageChange={handlePageChange}
           />
         </>
+      )}
+      
+      {!isLoading && !error && movies.length === 0 && (
+         <MessageDisplay message="No movies found" subMessage="Try adjusting your search or filters." />
       )}
     </main>
   );

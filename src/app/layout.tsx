@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import "./globals.css";
 import Footer from "@/components/Footer";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Inter } from "next/font/google";
+import { FavoritesProvider } from "@/hooks/useFavorites"; 
+import { ScrollToTop } from "@/components/ScrollToTop";
 
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   // --- Basic Info ---
@@ -38,12 +44,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-      >
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} flex flex-col min-h-screen`}>
+        
+        <FavoritesProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          
             <Navbar /> 
-        {children}
+            <ScrollToTop />
+        <main className="flex-grow">{children}</main>
+        
         <Footer />
+        </ThemeProvider>
+        </FavoritesProvider>
       </body>
     </html>
   );
