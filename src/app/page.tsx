@@ -109,6 +109,7 @@ function MovieSearchPage() {
       {isLoading ? (
         <MovieGridSkeleton />
       ) : movies.length > 0 ? ( // <--  الشرط الجديد: هل هناك أفلام؟
+        <>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {movies.map(
             (movie) =>
@@ -137,17 +138,7 @@ function MovieSearchPage() {
               )
           )}
         </div>
-      ) : (
-        // <--  ماذا سيحدث إذا لم يكن هناك أفلام؟
-        <div className="text-center col-span-full py-10">
-          <h2 className="text-2xl font-semibold">No movies found</h2>
-          <p className="text-muted-foreground mt-2">
-            We couldn&apos;t find any movies matching your search. Please try a
-            different keyword.
-          </p>
-        </div>
-      )}
-      {/* --- قسم التحكم بالصفحات المحدث --- */}
+         {/* --- قسم التحكم بالصفحات المحدث --- */}
       <div className="flex justify-center items-center gap-4 mt-8">
         <Button
           onClick={() => handlePageChange(currentPage - 1)}
@@ -165,6 +156,18 @@ function MovieSearchPage() {
         </form>
         <Button onClick={() => handlePageChange(currentPage + 1)}>Next</Button>
       </div>
+      </>
+      ) : (
+        // <--  ماذا سيحدث إذا لم يكن هناك أفلام؟
+        <div className="text-center col-span-full py-10">
+          <h2 className="text-2xl font-semibold">No movies found</h2>
+          <p className="text-muted-foreground mt-2">
+            We couldn&apos;t find any movies matching your search. Please try a
+            different keyword.
+          </p>
+        </div>
+      )}
+     
     </main>
   );
 }
