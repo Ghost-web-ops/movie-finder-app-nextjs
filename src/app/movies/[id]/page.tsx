@@ -27,7 +27,8 @@ interface MovieDetails {
   tagline: string;
 }
 
-export default async function MovieDetailPage({ params }: { params: { id: string } }) {
+export default async function MovieDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const movie: MovieDetails | null = await getMovieDetails(params.id);
 
   if (!movie) {
