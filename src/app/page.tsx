@@ -6,23 +6,27 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 interface Movie {
   id: number;
   title: string;
   poster_path: string;
   release_date: string;
+  vote_average: number;
 }
 
 // مكون لعرض رسالة التحميل
-function MovieGridSkeleton() {
-  return <div className="text-center col-span-full">Loading movies...</div>;
-}
+
 
 function MovieSearchPage() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [totalPages, setTotalPages] = useState(1);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -48,6 +52,7 @@ function MovieSearchPage() {
       try {
         const response = await axios.get(url);
         setMovies(response.data.results);
+        setTotalPages(response.data.total_pages);
       } catch (error) {
         console.error("Failed to fetch movies:", error);
       } finally {
@@ -64,7 +69,7 @@ function MovieSearchPage() {
   };
 
   const handlePageChange = (newPage: number) => {
-    if (newPage < 1) return;
+    if (newPage < 1 || newPage > totalPages) return;
     const queryParam = currentSearch
       ? `query=${encodeURIComponent(currentSearch)}&`
       : "";
@@ -75,7 +80,7 @@ function MovieSearchPage() {
   const handleGoToPage = (e: FormEvent) => {
     e.preventDefault();
     const pageNum = parseInt(pageInput);
-    if (!isNaN(pageNum) && pageNum > 0) {
+    if (!isNaN(pageNum) && pageNum > 0 && pageNum <= totalPages) {
       handlePageChange(pageNum);
     }
   };
@@ -101,62 +106,95 @@ function MovieSearchPage() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="rounded-r-none"
         />
-        <Button type="submit" className="rounded-l-none">
-          Search
+        <Button type="submit" className="rounded-l-none" disabled={isLoading}>
+          {isLoading ? "Loading..." : "Search"}
         </Button>
       </form>
 
       {isLoading ? (
-        <MovieGridSkeleton />
+        <>
+          <Skeleton height={200} />
+          <Skeleton count={2} />
+        </>
       ) : movies.length > 0 ? ( // <--  الشرط الجديد: هل هناك أفلام؟
         <>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {movies.map(
-            (movie) =>
-              movie.poster_path && (
-                <Link
-                  href={`/movies/${movie.id}`}
-                  key={movie.id}
-                  className="group"
-                >
-                  <div className="overflow-hidden rounded-lg">
-                    <Image
-                      src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                      alt={movie.title}
-                      width={500}
-                      height={750}
-                      className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                  <h3 className="mt-2 text-sm font-semibold text-foreground truncate">
-                    {movie.title}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {movie.release_date?.substring(0, 4)}
-                  </p>
-                </Link>
-              )
-          )}
-        </div>
-         {/* --- قسم التحكم بالصفحات المحدث --- */}
-      <div className="flex justify-center items-center gap-4 mt-8">
-        <Button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </Button>
-        <form onSubmit={handleGoToPage} className="flex items-center gap-2">
-          <Input
-            type="number"
-            value={pageInput}
-            onChange={(e) => setPageInput(e.target.value)}
-            className="w-16 text-center"
-          />
-        </form>
-        <Button onClick={() => handlePageChange(currentPage + 1)}>Next</Button>
-      </div>
-      </>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {movies.map(
+              (movie) =>
+                movie.poster_path && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    key={movie.id}
+                  >
+                    <Link
+                      href={`/movies/${movie.id}`}
+                      key={movie.id}
+                      className="group"
+                    >
+                      <div className="overflow-hidden rounded-lg">
+                        <Image
+                          src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                          alt={movie.title}
+                          width={500}
+                          height={750}
+                          className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      </div>
+                      <h3 className="mt-2 text-sm font-semibold text-foreground truncate">
+                        {movie.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        {movie.release_date?.substring(0, 4)}
+                      </p>
+                      <p className="text-xs text-yellow-500">
+                        ⭐ {movie.vote_average.toFixed(1)} / 10
+                      </p>
+                    </Link>
+                  </motion.div>
+                )
+            )}
+          </div>
+          {/* --- قسم التحكم بالصفحات المحدث --- */}
+          <div className="flex items-center justify-center gap-4 mt-8">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors duration-200"
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+
+            <form onSubmit={handleGoToPage} className="flex items-center gap-2">
+              <input
+                type="number"
+                value={pageInput}
+                onChange={(e) => setPageInput(e.target.value)}
+                placeholder="Go to page"
+                className="px-2 py-1 border rounded w-24 text-center"
+              />
+              <button
+                type="submit"
+                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none"
+              >
+                Go
+              </button>
+            </form>
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              className="px-4 py-2 bg-gray-800 text-white rounded-lg shadow-md transition-colors duration-300 hover:bg-gray-700 focus:outline-none"
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+
+            <span className="text-sm text-gray-600">
+              Page {currentPage} of {totalPages}
+            </span>
+          </div>
+        </>
       ) : (
         // <--  ماذا سيحدث إذا لم يكن هناك أفلام؟
         <div className="text-center col-span-full py-10">
@@ -167,7 +205,6 @@ function MovieSearchPage() {
           </p>
         </div>
       )}
-     
     </main>
   );
 }
